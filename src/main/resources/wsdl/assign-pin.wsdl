@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<definitions xmlns="http://schemas.xmlsoap.org/wsdl/"
+             xmlns:impl="urn:IssuingWS"
+             xmlns:tns1="urn:issuing_v_01_02_xsd"
+             xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+             xmlns:wsdlsoap="http://schemas.xmlsoap.org/wsdl/soap/"
+             xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+             targetNamespace="urn:IssuingWS">
+    <wsdl:types>
+        <schema xmlns="http://www.w3.org/2001/XMLSchema" targetNamespace="urn:issuing_v_01_02_xsd">
+            <import namespace="http://schemas.xmlsoap.org/soap/encoding/"/>
+            <complexType name="OperationConnectionInfo">
+                <sequence>
+                    <element name="BANK_C" nillable="true" type="xsd:string"/>
+                    <element name="GROUPC" nillable="true" type="xsd:string"/>
+                    <element name="FAULT_MODE" minOccurs="0" maxOccurs="1" nillable="true" type="xsd:decimal"/>
+                    <element name="EXTERNAL_SESSION_ID" minOccurs="0" maxOccurs="1" nillable="true" type="xsd:string"/>
+                    <element name="SHARD_ID" minOccurs="0" maxOccurs="1" nillable="true" type="xsd:string"/>
+                </sequence>
+            </complexType>
+            <complexType name="OperationResponseInfo">
+                <sequence>
+                    <element name="response_code" nillable="true" type="xsd:integer"/>
+                    <element name="error_description" minOccurs="0" maxOccurs="1" nillable="true" type="xsd:string"/>
+                    <element name="error_action" minOccurs="0" maxOccurs="1" nillable="true" type="xsd:string"/>
+                    <element name="EXTERNAL_SESSION_ID" minOccurs="0" maxOccurs="1" nillable="true" type="xsd:string"/>
+                    <element name="SHARD_ID" minOccurs="0" maxOccurs="1" nillable="true" type="xsd:string"/>
+                </sequence>
+            </complexType>
+            <complexType name="RowType_AssignPIN_Request">
+                <sequence>
+                    <element name="CARD" nillable="true" type="xsd:string"/>
+                    <element name="EXPIRY" nillable="true" type="xsd:string"/>
+                    <element name="PINBLOCK" nillable="true" type="xsd:string"/>
+                    <element name="STAN" nillable="true" type="xsd:string"/>
+                    <element name="TRANSACTION_DATETIME" minOccurs="0" maxOccurs="1" nillable="true" type="xsd:dateTime"/>
+                    <element name="CARD_SECURE_CODE" minOccurs="0" maxOccurs="1" nillable="true" type="xsd:string"/>
+                    <element name="ACQUIRER_ID" minOccurs="0" maxOccurs="1" nillable="true" type="xsd:string"/>
+                    <element name="TERMINAL_ID" minOccurs="0" maxOccurs="1" nillable="true" type="xsd:string"/>
+                    <element name="MERCHANT_ID" minOccurs="0" maxOccurs="1" nillable="true" type="xsd:string"/>
+                    <element name="TERMINAL_LOCATION" minOccurs="0" maxOccurs="1" nillable="true" type="xsd:string"/>
+                </sequence>
+            </complexType>
+            <complexType name="RowType_AssignPIN_Response">
+                <sequence>
+                    <element name="CARD" nillable="true" type="xsd:string"/>
+                    <element name="EXPIRY" nillable="true" type="xsd:string"/>
+                    <element name="STAN" nillable="true" type="xsd:string"/>
+                    <element name="ACQUIRER_ID" minOccurs="0" maxOccurs="1" nillable="true" type="xsd:string"/>
+                    <element name="TERMINAL_ID" minOccurs="0" maxOccurs="1" nillable="true" type="xsd:string"/>
+                    <element name="MERCHANT_ID" minOccurs="0" maxOccurs="1" nillable="true" type="xsd:string"/>
+                    <element name="TERMINAL_LOCATION" minOccurs="0" maxOccurs="1" nillable="true" type="xsd:string"/>
+                    <element name="APPROVAL_CODE" nillable="true" type="xsd:string"/>
+                    <element name="RESPONSE_CODE" nillable="true" type="xsd:decimal"/>
+                    <element name="TRANSMISSION_DATETIME" minOccurs="0" maxOccurs="1" nillable="true" type="xsd:dateTime"/>
+                    <element name="TRANSACTION_DATETIME" minOccurs="0" maxOccurs="1" nillable="true" type="xsd:dateTime"/>
+                </sequence>
+            </complexType>
+        </schema>
+    </wsdl:types>
+    <message name="assignPINRequest">
+        <part name="ConnectionInfo" type="tns1:OperationConnectionInfo"/>
+        <part name="Parameters" type="tns1:RowType_AssignPIN_Request"/>
+    </message>
+    <message name="assignPINResponse">
+        <part name="ResponseInfo" type="tns1:OperationResponseInfo"/>
+        <part name="Details" type="tns1:RowType_AssignPIN_Response"/>
+    </message>
+    <portType name="IssuingPort">
+        <operation name="assignPIN" parameterOrder="ConnectionInfo Parameters ResponseInfo Details">
+            <input message="impl:assignPINRequest" name="assignPINRequest"/>
+            <output message="impl:assignPINResponse" name="assignPINResponse"/>
+        </operation>
+    </portType>
+    <binding name="IssuingSoapBinding" type="impl:IssuingPort">
+        <wsdlsoap:binding style="rpc" transport="http://schemas.xmlsoap.org/soap/http"/>
+        <operation name="assignPIN">
+            <wsdlsoap:operation soapAction=""/>
+            <input name="assignPINRequest">
+                <wsdlsoap:body use="encoded" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" namespace="urn:IssuingWS/binding"/>
+            </input>
+            <output name="assignPINResponse">
+                <wsdlsoap:body use="encoded" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" namespace="urn:IssuingWS"/>
+            </output>
+        </operation>
+    </binding>
+    <service name="IssuingService">
+        <port name="Issuing" binding="impl:IssuingSoapBinding">
+            <wsdlsoap:address location="https://10.100.100.114:8443/issuingws/services/Issuing"/>
+        </port>
+    </service>
+</definitions>

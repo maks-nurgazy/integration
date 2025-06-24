@@ -2,6 +2,11 @@ package kg.rsk.integrationmpc.service;
 
 import kg.rsk.integrationmpc.config.IssuingServiceProperties;
 import kg.rsk.integrationmpc.util.PinBlockUtil;
+import kg.rsk.integrationmpc.ws.AssignPinSoapRequest;
+import kg.rsk.integrationmpc.ws.OperationConnectionInfo;
+import kg.rsk.integrationmpc.ws.RowTypeAssignPINRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -12,39 +17,55 @@ public class IssuingServiceImpl implements IssuingService {
 
     private final WebClient webClient;
     private final IssuingServiceProperties issuingServiceProperties;
+    private static final Logger log = LoggerFactory.getLogger(IssuingServiceImpl.class);
 
     @Override
     public String assignPin(String card, String expiry, String pin, String pan, String stan) throws Exception {
-        String zpk = PinBlockUtil.deriveZpk(issuingServiceProperties.getZpkComponent1(), issuingServiceProperties.getZpkComponent2());
+        log.info("Assigning PIN for card [{}]", card);
+        String zpk = PinBlockUtil.deriveZpk(
+                issuingServiceProperties.getZpkComponent1(),
+                issuingServiceProperties.getZpkComponent2());
         String pinBlock = PinBlockUtil.buildEncryptedPinBlock(pin, pan, zpk);
-        String body = createRequestBody(card, expiry, pinBlock, stan);
 
-        return webClient.post()
-                .bodyValue(body)
-                .retrieve()
-                .bodyToMono(String.class)
-                .block();
+        OperationConnectionInfo connectionInfo = new OperationConnectionInfo();
+        connectionInfo.setBankC(issuingServiceProperties.getBankC());
+        connectionInfo.setGroupC(issuingServiceProperties.getGroupC());
+
+        RowTypeAssignPINRequest params = new RowTypeAssignPINRequest();
+        params.setCard(card);
+        params.setExpiry(expiry);
+        params.setPinblock(pinBlock);
+        params.setStan(stan);
+
+        AssignPinSoapRequest request = new AssignPinSoapRequest();
+        request.setConnectionInfo(connectionInfo);
+        request.setParameters(params);
+        String body = request.toXml();
+
+        try {
+            return webClient.post()
+                    .bodyValue(body)
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .block();
+        } catch (Exception ex) {
+            log.error("Error during assignPIN request", ex);
+            throw ex;
+        }
     }
 
     private String createRequestBody(String card, String expiry, String pinBlock, String stan) {
-        return """
-                <soapenv:Envelope xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:bin=\"urn:IssuingWS/binding\">
-                    <soapenv:Header/>
-                    <soapenv:Body>
-                        <bin:assignPIN soapenv:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\">
-                            <ConnectionInfo xsi:type=\"urn:OperationConnectionInfo\" xmlns:urn=\"urn:issuing_v_01_02_xsd\">
-                                <BANK_C xsi:type=\"xsd:string\">%s</BANK_C>
-                                <GROUPC xsi:type=\"xsd:string\">%s</GROUPC>
-                            </ConnectionInfo>
-                            <Parameters xsi:type=\"urn:RowType_AssignPIN_Request\" xmlns:urn=\"urn:issuing_v_01_02_xsd\">
-                                <CARD xsi:type=\"xsd:string\">%s</CARD>
-                                <EXPIRY xsi:type=\"xsd:string\">%s</EXPIRY>
-                                <PINBLOCK xsi:type=\"xsd:string\">%s</PINBLOCK>
-                                <STAN xsi:type=\"xsd:string\">%s</STAN>
-                            </Parameters>
-                        </bin:assignPIN>
-                    </soapenv:Body>
-                </soapenv:Envelope>
-                """.formatted(issuingServiceProperties.getBankC(), issuingServiceProperties.getGroupC(), card, expiry, pinBlock, stan);
+        AssignPinSoapRequest request = new AssignPinSoapRequest();
+        OperationConnectionInfo connectionInfo = new OperationConnectionInfo();
+        connectionInfo.setBankC(issuingServiceProperties.getBankC());
+        connectionInfo.setGroupC(issuingServiceProperties.getGroupC());
+        RowTypeAssignPINRequest params = new RowTypeAssignPINRequest();
+        params.setCard(card);
+        params.setExpiry(expiry);
+        params.setPinblock(pinBlock);
+        params.setStan(stan);
+        request.setConnectionInfo(connectionInfo);
+        request.setParameters(params);
+        return request.toXml();
     }
 }
