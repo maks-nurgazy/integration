@@ -20,8 +20,8 @@ class PinBlockUtilTest {
 
     @Test
     void buildEncryptedPinBlockExample() throws Exception {
-        String comp1 = "4034 B679 1FA2 549D";
-        String comp2 = "9164 EF29 3851 07D9";
+        String comp1 = "4034B6791FA2549D";
+        String comp2 = "9164EF29385107D9";
         String pan = "43219876543210987";
         String pin = "1234";
         String expectedKcv = "9FEEDA";
@@ -30,7 +30,7 @@ class PinBlockUtilTest {
 
         System.out.println("Final ZPK: " + zpk);
         System.out.println("KCV: " + kcv);
-//        assertTrue(kcv.startsWith(expectedKcv.substring(0, 6)));
+        assertTrue(kcv.startsWith(expectedKcv.substring(0, 6)));
 
         String encryptedPinBlock = PinBlockUtil.buildEncryptedPinBlock(pin, pan, zpk);
         System.out.println("Encrypted PIN block: " + encryptedPinBlock);

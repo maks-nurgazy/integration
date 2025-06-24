@@ -8,8 +8,7 @@ import javax.crypto.spec.SecretKeySpec;
  */
 public final class PinBlockUtil {
 
-    private PinBlockUtil() {
-    }
+    private PinBlockUtil() {}
 
     /**
      * Derive the final ZPK by XORing two components.
@@ -41,12 +40,7 @@ public final class PinBlockUtil {
         String panBlock = createPanBlock(pan);
         byte[] clearPinBlockBytes = xor(hexToBytes(pinBlock), hexToBytes(panBlock));
 
-        // ZPK is 16 hex chars (8 bytes) - expand to 24 bytes for 3DES key: K1|K1|K1 (for demo)
-        byte[] zpkBytes = hexToBytes(zpk);
-        byte[] keyBytes = new byte[24];
-        System.arraycopy(zpkBytes, 0, keyBytes, 0, 8);
-        System.arraycopy(zpkBytes, 0, keyBytes, 8, 8);
-        System.arraycopy(zpkBytes, 0, keyBytes, 16, 8);
+        byte[] keyBytes = expandZpkFor3Des(zpk);
 
         SecretKeySpec key = new SecretKeySpec(keyBytes, "DESede");
         Cipher cipher = Cipher.getInstance("DESede/ECB/NoPadding");
@@ -55,13 +49,12 @@ public final class PinBlockUtil {
         return bytesToHex(encrypted);
     }
 
+    /**
+     * Calculate the KCV for a given ZPK.
+     * KCV is the first 6 hex digits of 3DES(ZPK, 8 zero bytes).
+     */
     public static String calculateKcv(String zpk) throws Exception {
-        // KCV is first 6 hex of encrypting 16 zero bits (8 bytes 0x00) with ZPK
-        byte[] zpkBytes = hexToBytes(zpk);
-        byte[] keyBytes = new byte[24];
-        System.arraycopy(zpkBytes, 0, keyBytes, 0, 8);
-        System.arraycopy(zpkBytes, 0, keyBytes, 8, 8);
-        System.arraycopy(zpkBytes, 0, keyBytes, 16, 8);
+        byte[] keyBytes = expandZpkFor3Des(zpk);
 
         SecretKeySpec key = new SecretKeySpec(keyBytes, "DESede");
         Cipher cipher = Cipher.getInstance("DESede/ECB/NoPadding");
@@ -69,6 +62,34 @@ public final class PinBlockUtil {
         byte[] zeros = new byte[8];
         byte[] encrypted = cipher.doFinal(zeros);
         return bytesToHex(encrypted).substring(0, 6);
+    }
+
+    /**
+     * Expands ZPK (hex string) to a 24-byte key for 3DES encryption.
+     * Supports single, double, and triple-length ZPKs.
+     */
+    private static byte[] expandZpkFor3Des(String zpk) {
+        byte[] zpkBytes = hexToBytes(zpk);
+        byte[] keyBytes = new byte[24];
+        if (zpkBytes.length == 8) {
+            // Single-length: K1 | K1 | K1
+            System.arraycopy(zpkBytes, 0, keyBytes, 0, 8);
+            System.arraycopy(zpkBytes, 0, keyBytes, 8, 8);
+            System.arraycopy(zpkBytes, 0, keyBytes, 16, 8);
+        } else if (zpkBytes.length == 16) {
+            // Double-length: K1 | K2 | K1
+            System.arraycopy(zpkBytes, 0, keyBytes, 0, 8);
+            System.arraycopy(zpkBytes, 8, keyBytes, 8, 8);
+            System.arraycopy(zpkBytes, 0, keyBytes, 16, 8);
+        } else if (zpkBytes.length == 24) {
+            // Triple-length: K1 | K2 | K3
+            System.arraycopy(zpkBytes, 0, keyBytes, 0, 8);
+            System.arraycopy(zpkBytes, 8, keyBytes, 8, 8);
+            System.arraycopy(zpkBytes, 16, keyBytes, 16, 8);
+        } else {
+            throw new IllegalArgumentException("ZPK must be 16, 32, or 48 hex digits (8, 16, or 24 bytes)");
+        }
+        return keyBytes;
     }
 
     private static String createPinBlock(String pin) {
