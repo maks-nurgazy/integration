@@ -5,9 +5,9 @@ import kg.rsk.integrationmpc.util.PinBlockUtil;
 import kg.rsk.integrationmpc.ws.AssignPinSoapRequest;
 import kg.rsk.integrationmpc.ws.OperationConnectionInfo;
 import kg.rsk.integrationmpc.ws.RowTypeAssignPINRequest;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -52,20 +52,5 @@ public class IssuingServiceImpl implements IssuingService {
             log.error("Error during assignPIN request", ex);
             throw ex;
         }
-    }
-
-    private String createRequestBody(String card, String expiry, String pinBlock, String stan) {
-        AssignPinSoapRequest request = new AssignPinSoapRequest();
-        OperationConnectionInfo connectionInfo = new OperationConnectionInfo();
-        connectionInfo.setBankC(issuingServiceProperties.getBankC());
-        connectionInfo.setGroupC(issuingServiceProperties.getGroupC());
-        RowTypeAssignPINRequest params = new RowTypeAssignPINRequest();
-        params.setCard(card);
-        params.setExpiry(expiry);
-        params.setPinblock(pinBlock);
-        params.setStan(stan);
-        request.setConnectionInfo(connectionInfo);
-        request.setParameters(params);
-        return request.toXml();
     }
 }

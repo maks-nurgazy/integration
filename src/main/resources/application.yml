@@ -10,3 +10,13 @@ issuing:
   zpk-component-2: ${ISSUING_ZPK_COMPONENT_2:9164EF29385107D9}
   bank-c: ${ISSUING_BANK_C:04}
   group-c: ${ISSUING_GROUP_C:01}
+
+management:
+  endpoints:
+    web.exposure.include: ${MANAGEMENT_EXPOSURE_ENDPOINTS:*}
+  endpoint:
+    health.show-details: always
+    shutdown:
+      access: none
+    startup:
+      access: none
