@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: integration-mpc
+
+issuing:
+  url: ${ISSUING_BASE_URL:https://10.100.100.114:8443/issuingws/services/Issuing}
+  username: ${ISSUING_USER:ws_user_04}
+  password: ${ISSUING_PASSWORD:1qazXSW@}
+  zpk-component-1: ${ISSUING_ZPK_COMPONENT_1:4034B6791FA2549D}
+  zpk-component-2: ${ISSUING_ZPK_COMPONENT_2:9164EF29385107D9}
+  bank-c: ${ISSUING_BANK_C:04}
+  group-c: ${ISSUING_GROUP_C:01}

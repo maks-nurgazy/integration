@@ -50,11 +50,11 @@ public final class PinBlockUtil {
     }
 
     private static String formatPinBlock(String pin) {
-        String block = "0" + pin.length() + pin;
+        StringBuilder block = new StringBuilder("0" + pin.length() + pin);
         while (block.length() < 16) {
-            block += "F";
+            block.append("F");
         }
-        return block;
+        return block.toString();
     }
 
     private static String formatPanBlock(String pan) {
