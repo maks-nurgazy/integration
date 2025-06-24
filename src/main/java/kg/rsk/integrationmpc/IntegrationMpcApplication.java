@@ -10,4 +10,6 @@ public class IntegrationMpcApplication {
         SpringApplication.run(IntegrationMpcApplication.class, args);
     }
 
+    // REST controllers expose application functionality
+
 }
