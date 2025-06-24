@@ -6,6 +6,7 @@
              xmlns:wsdlsoap="http://schemas.xmlsoap.org/wsdl/soap/"
              xmlns:xsd="http://www.w3.org/2001/XMLSchema"
              targetNamespace="urn:IssuingWS">
+
     <wsdl:types>
         <schema xmlns="http://www.w3.org/2001/XMLSchema" targetNamespace="urn:issuing_v_01_02_xsd">
             <import namespace="http://schemas.xmlsoap.org/soap/encoding/"/>
@@ -58,6 +59,7 @@
             </complexType>
         </schema>
     </wsdl:types>
+
     <message name="assignPINRequest">
         <part name="ConnectionInfo" type="tns1:OperationConnectionInfo"/>
         <part name="Parameters" type="tns1:RowType_AssignPIN_Request"/>
@@ -66,12 +68,14 @@
         <part name="ResponseInfo" type="tns1:OperationResponseInfo"/>
         <part name="Details" type="tns1:RowType_AssignPIN_Response"/>
     </message>
+
     <portType name="IssuingPort">
         <operation name="assignPIN" parameterOrder="ConnectionInfo Parameters ResponseInfo Details">
             <input message="impl:assignPINRequest" name="assignPINRequest"/>
             <output message="impl:assignPINResponse" name="assignPINResponse"/>
         </operation>
     </portType>
+
     <binding name="IssuingSoapBinding" type="impl:IssuingPort">
         <wsdlsoap:binding style="rpc" transport="http://schemas.xmlsoap.org/soap/http"/>
         <operation name="assignPIN">
@@ -84,6 +88,7 @@
             </output>
         </operation>
     </binding>
+
     <service name="IssuingService">
         <port name="Issuing" binding="impl:IssuingSoapBinding">
             <wsdlsoap:address location="https://10.100.100.114:8443/issuingws/services/Issuing"/>

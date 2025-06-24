@@ -40,7 +40,21 @@
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-webflux</artifactId>
+            <artifactId>spring-boot-starter-web-services</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.xml.bind</groupId>
+            <artifactId>jaxb-impl</artifactId>
+            <version>4.0.5</version>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.xml.bind</groupId>
+            <artifactId>jakarta.xml.bind-api</artifactId>
+            <version>4.0.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jaxb</groupId>
+            <artifactId>jaxb-runtime</artifactId>
         </dependency>
 
         <dependency>
@@ -65,21 +79,26 @@
         <plugins>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
-                <artifactId>jaxws-maven-plugin</artifactId>
-                <version>2.6</version>
+                <artifactId>jaxb2-maven-plugin</artifactId>
+                <version>3.1.0</version>
                 <executions>
                     <execution>
+                        <id>generate-sources</id>
                         <goals>
-                            <goal>wsimport</goal>
+                            <goal>xjc</goal>
                         </goals>
+                        <phase>generate-sources</phase>
                     </execution>
                 </executions>
                 <configuration>
-                    <wsdlDirectory>${project.basedir}/src/main/resources/wsdl</wsdlDirectory>
-                    <wsdlFiles>
-                        <wsdlFile>assign-pin.wsdl</wsdlFile>
-                    </wsdlFiles>
-                    <packageName>kg.rsk.integrationmpc.ws</packageName>
+                    <sourceType>wsdl</sourceType>
+                    <sources>
+                        <source>${basedir}/src/main/resources/wsdl/assign-pin.wsdl</source>
+                    </sources>
+                    <packageName>kg.rsk.integrationmpc.wsdl.pin</packageName>
+                    <outputDirectory>${basedir}/target/generated-sources/jaxb</outputDirectory>
+                    <clearOutputDir>true</clearOutputDir>
+                    <extension>true</extension>
                 </configuration>
             </plugin>
             <plugin>

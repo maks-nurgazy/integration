@@ -2,22 +2,22 @@ package kg.rsk.integrationmpc.service;
 
 import kg.rsk.integrationmpc.config.IssuingServiceProperties;
 import kg.rsk.integrationmpc.util.PinBlockUtil;
-import kg.rsk.integrationmpc.ws.AssignPinSoapRequest;
-import kg.rsk.integrationmpc.ws.OperationConnectionInfo;
-import kg.rsk.integrationmpc.ws.RowTypeAssignPINRequest;
+import kg.rsk.integrationmpc.wsdl.AssignPINRequest;
+import kg.rsk.integrationmpc.wsdl.AssignPINResponse;
+import kg.rsk.integrationmpc.wsdl.pin.OperationConnectionInfo;
+import kg.rsk.integrationmpc.wsdl.pin.RowTypeAssignPINRequest;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.ws.client.core.WebServiceTemplate;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class IssuingServiceImpl implements IssuingService {
 
-    private final WebClient webClient;
+    private final WebServiceTemplate webServiceTemplate;
     private final IssuingServiceProperties issuingServiceProperties;
-    private static final Logger log = LoggerFactory.getLogger(IssuingServiceImpl.class);
 
     @Override
     public String assignPin(String card, String expiry, String pin, String pan, String stan) throws Exception {
@@ -28,26 +28,23 @@ public class IssuingServiceImpl implements IssuingService {
         String pinBlock = PinBlockUtil.buildEncryptedPinBlock(pin, pan, zpk);
 
         OperationConnectionInfo connectionInfo = new OperationConnectionInfo();
-        connectionInfo.setBankC(issuingServiceProperties.getBankC());
-        connectionInfo.setGroupC(issuingServiceProperties.getGroupC());
+        connectionInfo.setBANKC(issuingServiceProperties.getBankC());
+        connectionInfo.setGROUPC(issuingServiceProperties.getGroupC());
 
         RowTypeAssignPINRequest params = new RowTypeAssignPINRequest();
-        params.setCard(card);
-        params.setExpiry(expiry);
-        params.setPinblock(pinBlock);
-        params.setStan(stan);
+        params.setCARD(card);
+        params.setEXPIRY(expiry);
+        params.setPINBLOCK(pinBlock);
+        params.setSTAN(stan);
 
-        AssignPinSoapRequest request = new AssignPinSoapRequest();
-        request.setConnectionInfo(connectionInfo);
-        request.setParameters(params);
-        String body = request.toXml();
+        AssignPINRequest assignPINRequest = new AssignPINRequest();
+        assignPINRequest.setConnectionInfo(connectionInfo);
+        assignPINRequest.setParameters(params);
 
         try {
-            return webClient.post()
-                    .bodyValue(body)
-                    .retrieve()
-                    .bodyToMono(String.class)
-                    .block();
+            AssignPINResponse response = (AssignPINResponse) webServiceTemplate.marshalSendAndReceive(assignPINRequest);
+
+            return response.toString();
         } catch (Exception ex) {
             log.error("Error during assignPIN request", ex);
             throw ex;
