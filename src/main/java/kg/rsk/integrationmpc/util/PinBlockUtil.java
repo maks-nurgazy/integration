@@ -19,6 +19,9 @@ public final class PinBlockUtil {
      * @return resulting ZPK in hex
      */
     public static String deriveZpk(String component1, String component2) {
+        // Remove spaces for safe parsing
+        component1 = component1.replaceAll("\\s+", "");
+        component2 = component2.replaceAll("\\s+", "");
         long c1 = Long.parseUnsignedLong(component1, 16);
         long c2 = Long.parseUnsignedLong(component2, 16);
         long result = c1 ^ c2;
@@ -38,13 +41,34 @@ public final class PinBlockUtil {
         String panBlock = createPanBlock(pan);
         byte[] blockBytes = xor(hexToBytes(pinBlock), hexToBytes(panBlock));
 
-        // 3DES key uses the ZPK twice to form a 16 byte key
-        byte[] keyBytes = hexToBytes(zpk + zpk);
+        // ZPK is 16 hex chars (8 bytes) - expand to 24 bytes for 3DES key: K1|K1|K1 (for demo)
+        byte[] zpkBytes = hexToBytes(zpk);
+        byte[] keyBytes = new byte[24];
+        System.arraycopy(zpkBytes, 0, keyBytes, 0, 8);
+        System.arraycopy(zpkBytes, 0, keyBytes, 8, 8);
+        System.arraycopy(zpkBytes, 0, keyBytes, 16, 8);
+
         SecretKeySpec key = new SecretKeySpec(keyBytes, "DESede");
         Cipher cipher = Cipher.getInstance("DESede/ECB/NoPadding");
         cipher.init(Cipher.ENCRYPT_MODE, key);
         byte[] encrypted = cipher.doFinal(blockBytes);
         return bytesToHex(encrypted);
+    }
+
+    public static String calculateKcv(String zpk) throws Exception {
+        // KCV is first 6 hex of encrypting 16 zero bits (8 bytes 0x00) with ZPK
+        byte[] zpkBytes = hexToBytes(zpk);
+        byte[] keyBytes = new byte[24];
+        System.arraycopy(zpkBytes, 0, keyBytes, 0, 8);
+        System.arraycopy(zpkBytes, 0, keyBytes, 8, 8);
+        System.arraycopy(zpkBytes, 0, keyBytes, 16, 8);
+
+        SecretKeySpec key = new SecretKeySpec(keyBytes, "DESede");
+        Cipher cipher = Cipher.getInstance("DESede/ECB/NoPadding");
+        cipher.init(Cipher.ENCRYPT_MODE, key);
+        byte[] zeros = new byte[8];
+        byte[] encrypted = cipher.doFinal(zeros);
+        return bytesToHex(encrypted).substring(0, 6);
     }
 
     private static String createPinBlock(String pin) {
