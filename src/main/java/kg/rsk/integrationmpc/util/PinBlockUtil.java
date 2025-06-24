@@ -39,7 +39,7 @@ public final class PinBlockUtil {
     public static String buildEncryptedPinBlock(String pin, String pan, String zpk) throws Exception {
         String pinBlock = createPinBlock(pin);
         String panBlock = createPanBlock(pan);
-        byte[] blockBytes = xor(hexToBytes(pinBlock), hexToBytes(panBlock));
+        byte[] clearPinBlockBytes = xor(hexToBytes(pinBlock), hexToBytes(panBlock));
 
         // ZPK is 16 hex chars (8 bytes) - expand to 24 bytes for 3DES key: K1|K1|K1 (for demo)
         byte[] zpkBytes = hexToBytes(zpk);
@@ -51,7 +51,7 @@ public final class PinBlockUtil {
         SecretKeySpec key = new SecretKeySpec(keyBytes, "DESede");
         Cipher cipher = Cipher.getInstance("DESede/ECB/NoPadding");
         cipher.init(Cipher.ENCRYPT_MODE, key);
-        byte[] encrypted = cipher.doFinal(blockBytes);
+        byte[] encrypted = cipher.doFinal(clearPinBlockBytes);
         return bytesToHex(encrypted);
     }
 
